@@ -8,10 +8,6 @@ import Form from "react-bootstrap/Form";
 import { useEffect, useState, useReducer } from "react";
 import Alunos from "./alunos";
 
-interface HTMLInputEvent extends Event {
-    target: HTMLInputElement & EventTarget;
-}
-
 export default function Home() {
   const [image, setImage] = useState<File | null>(null);
   const [imageList, setImageList] = useState<string[]>([]);
@@ -42,7 +38,7 @@ export default function Home() {
       <Form.Control
         type="file"
         accept="image/*"
-        onChange={(e: HTMLInputEvent) => setImage(e.target.files![0])}
+        onChange={(e) => setImage((e.target as HTMLInputElement).files![0])}
       />
       <button onClick={uploadImage}>Adicionar imagem</button>
       <ul>
