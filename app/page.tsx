@@ -5,12 +5,11 @@ import { storage } from "./firebase";
 import { ref, uploadBytes, listAll, getDownloadURL } from "firebase/storage";
 import * as React from "react";
 import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
 import { useEffect, useState, useReducer } from "react";
 import Alunos from "./alunos";
 
 export default function Home() {
-  const [image, setImage] = useState<File>(null);
+  const [image, setImage] = useState<File | null>(null);
   const [imageList, setImageList] = useState<string[]>([]);
   const storageRef = ref(storage, "galeria");
   useEffect(() => {
@@ -25,7 +24,7 @@ export default function Home() {
 
   const uploadImage = () => {
     if (image === null) return;
-    const imageRef = ref(storage, `galeria/${image!.name}`);
+    const imageRef = ref(storage, `galeria/${image?.name}`);
     uploadBytes(imageRef, image).then((snapshot) => {
       console.log(snapshot.metadata.name);
       getDownloadURL(snapshot.ref).then((url: string) => {
