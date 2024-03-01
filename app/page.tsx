@@ -10,7 +10,7 @@ import { useEffect, useState, useReducer } from "react";
 import Alunos from "./alunos";
 
 export default function Home() {
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<File>(null);
   const [imageList, setImageList] = useState<string[]>([]);
   const storageRef = ref(storage, "galeria");
   useEffect(() => {
@@ -28,8 +28,8 @@ export default function Home() {
     const imageRef = ref(storage, `galeria/${image!.name}`);
     uploadBytes(imageRef, image).then((snapshot) => {
       console.log(snapshot.metadata.name);
-      getDownloadURL(snapshot.ref).then((url) => {
-        setImageList((prev) => [...prev, url]);
+      getDownloadURL(snapshot.ref).then((url: string) => {
+        setImageList((prev: string[]) => [...prev, url]);
       });
     });
   };
@@ -43,7 +43,7 @@ export default function Home() {
       />
       <button onClick={uploadImage}>Adicionar imagem</button>
       <ul>
-        {imageList.map((url, index) => (
+        {imageList.map((url: string, index: number) => (
           <Image src={url} key={index} width={200} height={200} alt="" />
         ))}
       </ul>
