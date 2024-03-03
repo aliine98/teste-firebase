@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { storage } from "./firebase";
+import { storage, db } from "./firebase";
 import {
   ref,
   uploadBytes,
@@ -13,24 +13,14 @@ import * as React from "react";
 import Form from "react-bootstrap/Form";
 import { useEffect, useState, useReducer } from "react";
 import Alunos from "./alunos";
+import { collection, addDoc } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 interface IAluno {
   name: string;
   belt: string;
-  imageName: string;
-}
-
-function reducer(state: IAluno, action: { type: string; payload: string }) {
-  switch (action.type) {
-    case "addName":
-      return { ...state, name: action.payload };
-    case "addBelt":
-      return { ...state, belt: action.payload };
-    case "addImage":
-      return { ...state, imageName: action.payload };
-    default:
-      return state;
-  }
+  photo: File;
+  photoName: string;
 }
 
 export default function Home() {
@@ -64,36 +54,105 @@ export default function Home() {
     });
   };
 
+  const [aluno, setAluno] = useState({} as IAluno);
+
+  const addAluno = async () => {
+    const photoRef = ref(storage, `alunos/${aluno.photoName}`);
+    uploadBytes(photoRef, aluno.photo).then((snapshot) => {
+      getDownloadURL(snapshot.ref).then((url: string) => {
+        addDoc(collection(db, "alunos"), {
+          name: aluno.name,
+          belt: aluno.belt,
+          photo: url,
+        }).then(() => {
+          window.location.reload();
+        });
+      });
+    });
+  };
+
+  const signIn = (email: string, password: string) => {
+    const auth = getAuth();
+    signInWithEmailAndPassword(auth, email, password).catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log(errorCode, errorMessage);
+    });
+  };
+
+  const user = getAuth().currentUser;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <>
-      <Form.Control
-        type="file"
-        accept="image/*"
-        onChange={(e) => setImage((e.target as HTMLInputElement).files![0])}
-      />
-      <button onClick={uploadImage}>Adicionar imagem</button>
+      <Form onSubmit={(e) => e.preventDefault()}>
+        <Form.Group controlId="formBasicEmail">
+          <Form.Label>Email:</Form.Label>
+          <Form.Control
+            type="email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Form.Label>Senha:</Form.Label>
+          <Form.Control
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Form.Group>
+        <button onClick={() => signIn(email, password)}>Entrar</button>
+      </Form>
+      {user && (
+        <div>
+          <Form.Control
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage((e.target as HTMLInputElement).files![0])}
+          />
+          <button onClick={uploadImage}>Adicionar imagem</button>
+        </div>
+      )}
       <ul>
         {imageList.map((url: string, index: number) => (
           <li key={index}>
             <Image src={url} key={index} width={200} height={200} alt="" />
-            <button onClick={() => deleteImage(url)}>Remover</button>
+            {user && <button onClick={() => deleteImage(url)}>Remover</button>}
           </li>
         ))}
       </ul>
       <h1>Alunos</h1>
-      <p>Adicionar alunos</p>
-      <form>
-        <label>
-          Nome: <input type="text" />
-        </label>
-        <label>
-          Faixa: <input type="text" />
-        </label>
-        <label>
-          Foto: <input type="file" accept="image/*" />
-        </label>
-        <input type="submit" />
-      </form>
+      {user && (
+        <form onSubmit={(e) => e.preventDefault()}>
+          <label>
+            Nome:{" "}
+            <input
+              type="text"
+              onChange={(e) => setAluno({ ...aluno, name: e.target.value })}
+            />
+          </label>
+          <label>
+            Faixa:{" "}
+            <input
+              type="text"
+              onChange={(e) => setAluno({ ...aluno, belt: e.target.value })}
+            />
+          </label>
+          <label>
+            Foto:{" "}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                setAluno({
+                  ...aluno,
+                  photo: (e.target as HTMLInputElement).files![0],
+                  photoName: (e.target as HTMLInputElement).files![0].name,
+                });
+              }}
+            />
+          </label>
+          <button onClick={addAluno}>Adicionar</button>
+        </form>
+      )}
 
       <Alunos />
     </>
