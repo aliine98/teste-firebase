@@ -73,11 +73,15 @@ export default function Home() {
 
   const signIn = (email: string, password: string) => {
     const auth = getAuth();
-    signInWithEmailAndPassword(auth, email, password).catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.log(errorCode, errorMessage);
-    });
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        window.location.reload();
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+      });
   };
 
   const user = getAuth().currentUser;
