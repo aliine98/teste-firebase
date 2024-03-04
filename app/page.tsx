@@ -15,6 +15,8 @@ import { useEffect, useState, useReducer } from "react";
 import Alunos from "./alunos";
 import { collection, addDoc } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface IAluno {
   name: string;
@@ -24,6 +26,7 @@ interface IAluno {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [image, setImage] = useState<File | null>(null);
   const [imageList, setImageList] = useState<string[]>([]);
   const storageRef = ref(storage, "galeria");
@@ -65,7 +68,7 @@ export default function Home() {
           belt: aluno.belt,
           photo: url,
         }).then(() => {
-          window.location.reload();
+          router.refresh();
         });
       });
     });
@@ -75,7 +78,7 @@ export default function Home() {
     const auth = getAuth();
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        window.location.reload();
+        router.refresh();
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -104,6 +107,7 @@ export default function Home() {
           />
         </Form.Group>
         <button onClick={() => signIn(email, password)}>Entrar</button>
+        <Link href="/forgot-password">Esqueci minha senha</Link>
       </Form>
       {user && (
         <div>
